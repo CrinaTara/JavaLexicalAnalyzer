@@ -63,20 +63,20 @@ public class TextEditFrame extends JFrame{
 		JMenu filemenu = new JMenu("File");
 		menu.add(filemenu);
 		
-		JMenuItem openitem = new JMenuItem("Apri",new ImageIcon("open.png"));
+		JMenuItem openitem = new JMenuItem("Open",new ImageIcon("open.png"));
 		chooser = new JFileChooser();
 		chooser.setFileFilter(new TxtFilter());
 		openitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
 		openitem.addActionListener( new FileOpenListener() );
 		filemenu.add(openitem);
 		
-		saveitem = new JMenuItem("Salva",new ImageIcon("save.png"));
+		saveitem = new JMenuItem("Save",new ImageIcon("save.png"));
 		saveitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
 		saveitem.addActionListener(new FileSaveListener());
 		filemenu.add(saveitem);
 		saveitem.setEnabled(false);
 		
-		JMenuItem saveasitem = new JMenuItem("Salva come...",new ImageIcon("saveas.png"));
+		JMenuItem saveasitem = new JMenuItem("Save As",new ImageIcon("saveas.png"));
 		savechooser = new JFileChooser();
 		savechooser.setFileFilter(new TxtFilter());
 		saveasitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
@@ -85,7 +85,7 @@ public class TextEditFrame extends JFrame{
 		
 		filemenu.addSeparator();
 		
-		JMenuItem exititem = new JMenuItem("Esci",new ImageIcon("exit.png"));
+		JMenuItem exititem = new JMenuItem("Exit",new ImageIcon("exit.png"));
 		exititem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
 		exititem.addActionListener( new ActionListener(){
 			public void actionPerformed(ActionEvent e)
@@ -95,10 +95,10 @@ public class TextEditFrame extends JFrame{
 		} );
 		filemenu.add(exititem);
 		
-		JMenu modmenu = new JMenu("Modifica");
+		JMenu modmenu = new JMenu("Edit");
 		menu.add(modmenu);
 		
-		JMenuItem selectitem = new JMenuItem("Seleziona tutto");
+		JMenuItem selectitem = new JMenuItem("Select All");
 		selectitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_MASK));
 		selectitem.addActionListener(new ActionListener(){
 			
@@ -112,17 +112,17 @@ public class TextEditFrame extends JFrame{
 		
 		modmenu.addSeparator();
 		
-		JMenuItem cutitem = new JMenuItem("Taglia",new ImageIcon("cut.png"));
+		JMenuItem cutitem = new JMenuItem("Cut",new ImageIcon("cut.png"));
 		cutitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_MASK));
 		cutitem.addActionListener(new CutListener());
 		modmenu.add(cutitem);
 		
-		JMenuItem copyitem = new JMenuItem("Copia",new ImageIcon("copy.png"));
+		JMenuItem copyitem = new JMenuItem("Copy",new ImageIcon("copy.png"));
 		copyitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK));
 		copyitem.addActionListener(new CopyListener());
 		modmenu.add(copyitem);
 		
-		JMenuItem pasteitem = new JMenuItem("Incolla",new ImageIcon("paste.png"));
+		JMenuItem pasteitem = new JMenuItem("Paste",new ImageIcon("paste.png"));
 		pasteitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK));
 		pasteitem.addActionListener(new PasteListener());
 		modmenu.add(pasteitem);
@@ -137,53 +137,53 @@ public class TextEditFrame extends JFrame{
 		
 		popup = new JPopupMenu();
 		
-		JMenuItem taglia = new JMenuItem("Taglia",new ImageIcon("cut.png"));
+		JMenuItem taglia = new JMenuItem("Cut",new ImageIcon("cut.png"));
 		taglia.addActionListener(new CutListener());
 		popup.add(taglia);
 		
-		JMenuItem copia = new JMenuItem("Copia",new ImageIcon("copy.png"));
+		JMenuItem copia = new JMenuItem("Copy",new ImageIcon("copy.png"));
 		copia.addActionListener(new CopyListener());
 		popup.add(copia);
 		
-		JMenuItem incolla = new JMenuItem("Incolla",new ImageIcon("paste.png"));
+		JMenuItem incolla = new JMenuItem("Paste",new ImageIcon("paste.png"));
 		incolla.addActionListener(new PasteListener());
 		popup.add(incolla);
 		
 		MouseListener popupListener = new PopupListener();
 		
-		JToolBar tools = new JToolBar("Strumenti");
+		JToolBar tools = new JToolBar("Tools");
 		
 		JButton bopenf = new JButton(new ImageIcon("open.png"));
 		bopenf.addActionListener(new FileOpenListener());
-		bopenf.setToolTipText("Apri File");
+		bopenf.setToolTipText("Open File");
 		tools.add(bopenf);
 		
 		bsave = new JButton(new ImageIcon("save.png"));
 		bsave.addActionListener(new FileSaveListener());
-		bsave.setToolTipText("Salva");
+		bsave.setToolTipText("Save");
 		bsave.setEnabled(false);
 		tools.add(bsave);
 		
 		JButton bsaveas = new JButton(new ImageIcon("saveas.png"));
 		bsaveas.addActionListener(new FileSaveAsListener());
-		bsaveas.setToolTipText("Salva come...");
+		bsaveas.setToolTipText("Save As");
 		tools.add(bsaveas);
 		
 		tools.addSeparator();
 		
 		JButton bcut = new JButton(new ImageIcon("cut.png"));
 		bcut.addActionListener(new CutListener());
-		bcut.setToolTipText("Taglia");
+		bcut.setToolTipText("Cut");
 		tools.add(bcut);
 		
 		JButton bcopy = new JButton(new ImageIcon("copy.png"));
 		bcopy.addActionListener(new CopyListener());
-		bcopy.setToolTipText("Copia");
+		bcopy.setToolTipText("Copy");
 		tools.add(bcopy);
 		
 		JButton bpaste = new JButton(new ImageIcon("paste.png"));
 		bpaste.addActionListener(new PasteListener());
-		bpaste.setToolTipText("Incolla");
+		bpaste.setToolTipText("Paste");
 		tools.add(bpaste);
 		
 		tools.addSeparator();
@@ -207,7 +207,7 @@ public class TextEditFrame extends JFrame{
 		
 		
 		/*
-		 * Pannello JTextArea
+		 * Panel JTextArea
 		 */
 		txtpanel = new JPanel();
 		txtpanel.setLayout(new BorderLayout());
@@ -245,7 +245,7 @@ public class TextEditFrame extends JFrame{
 				if(txtarea.getText() == null) count.setText("0");
 				String s = txtarea.getText();
 				StringTokenizer st = new StringTokenizer(s," "+"\n");
-				count.setText( "Parole: " + st.countTokens() + " Caratteri: " + s.length() );
+				count.setText( "Words: " + st.countTokens() + " Characters: " + s.length() );
 				try
 				{
 					Thread.sleep(500);
@@ -302,8 +302,8 @@ public class TextEditFrame extends JFrame{
 		{
 			super( fr, "Info", true );
 			
-			add(new JLabel("<html><h1><i>STK Inc.</html></h1></i>"), BorderLayout.CENTER );
-			JButton ok = new JButton("Ok");
+			add(new JLabel("<html><h1>StarSasumi</h1></html>"), BorderLayout.CENTER );
+			JButton ok = new JButton("OK");
 			ok.addActionListener( new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e)
