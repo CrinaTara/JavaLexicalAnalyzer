@@ -1,3 +1,4 @@
+package com.icemandailing.TextEditor;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -473,7 +474,7 @@ public class TextEditFrame extends JFrame{
 
 		public String getDescription()
 		{
-			return "Txt File";
+			return "TXT File";
 		}
 			
 	}

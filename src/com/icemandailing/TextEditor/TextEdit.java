@@ -1,3 +1,4 @@
+package com.icemandailing.TextEditor;
 import javax.swing.JFrame;
 
 //TextEditor
