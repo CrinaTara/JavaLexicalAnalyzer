@@ -12,11 +12,13 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
 
 import javax.swing.ImageIcon;
@@ -50,6 +52,7 @@ public class TextEditFrame extends JFrame{
 	private JPopupMenu popup;
 	private JLabel count;
 	private JButton bsave;
+	private String charsetName = "UTF-8";
 	
 	public TextEditFrame()
 	{
@@ -422,7 +425,7 @@ public class TextEditFrame extends JFrame{
 	
 	private class FileOpenListener implements ActionListener
 	{
-		FileReader f;
+		InputStreamReader in;
 		public void actionPerformed(ActionEvent e)
 		{
 			
@@ -435,11 +438,13 @@ public class TextEditFrame extends JFrame{
 				opened = chooser.getSelectedFile();
 				setTitle("TextEdit - " + opened);
 				try {
-					f = new FileReader(chooser.getSelectedFile());
+					in = new InputStreamReader(new FileInputStream(chooser.getSelectedFile()),charsetName);
 				} catch (FileNotFoundException e2) {
 					e2.printStackTrace();
+				} catch (UnsupportedEncodingException e1) {
+					e1.printStackTrace();
 				}
-				BufferedReader br = new BufferedReader(f);
+				BufferedReader br = new BufferedReader(in);
 				
 				try {
 					String s = br.readLine();
