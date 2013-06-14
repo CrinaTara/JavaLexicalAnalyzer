@@ -38,6 +38,8 @@ import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
 
+import com.icemandailing.JavaLex.JavaLex;
+
 public class TextEditFrame extends JFrame{
 	
 	private static final long serialVersionUID = 1L;
@@ -56,8 +58,8 @@ public class TextEditFrame extends JFrame{
 	
 	public TextEditFrame()
 	{
-		setTitle("TextEdit");
-		setSize(500,300);
+		setTitle("Java Lexical Analyzer");
+		setSize(800,600);
 		centerFrame();
 		/*
 		 * Menu
@@ -219,7 +221,8 @@ public class TextEditFrame extends JFrame{
 		Dimension fd = this.getSize();
 		txtarea.setBounds(new Rectangle(fd));
 		txtarea.setBounds(new Rectangle(fd));
-		txtarea.setLineWrap(true);
+		txtarea.setLineWrap(false);
+		txtarea.setTabSize(4);
 		JScrollPane scrolltxt = new JScrollPane(txtarea);
 		txtpanel.add(scrolltxt,BorderLayout.CENTER);
 		
@@ -235,8 +238,24 @@ public class TextEditFrame extends JFrame{
 		countpanel.add(count);
 		add(countpanel, BorderLayout.SOUTH);
 		
+		Lex lex = new Lex();
+		Thread lexThread = new Thread(lex);
+		lexThread.start();
 		
 		
+		
+	}
+	
+	private class Lex implements Runnable {
+		private JavaLex analyzer;
+		public void run() {
+			analyzer = new JavaLex(txtarea.getText());
+			while (true) {
+				if (analyzer.hasNextWord())
+					System.out.println(analyzer.nextWord());
+				
+			}
+		}
 	}
 	
 	private class Count implements Runnable
@@ -428,7 +447,7 @@ public class TextEditFrame extends JFrame{
 		InputStreamReader in;
 		public void actionPerformed(ActionEvent e)
 		{
-			
+			txtarea.setText("");
 			int ris = chooser.showOpenDialog(TextEditFrame.this);
 			
 			if(ris == JFileChooser.APPROVE_OPTION)
@@ -474,12 +493,12 @@ public class TextEditFrame extends JFrame{
 		
 		public boolean accept(File f) 
 		{
-			return f.getName().toLowerCase().endsWith(".txt") || f.isDirectory();
+			return f.getName().toLowerCase().endsWith(".java") || f.isDirectory();
 		}
 
 		public String getDescription()
 		{
-			return "TXT File";
+			return "Java Source File";
 		}
 			
 	}
