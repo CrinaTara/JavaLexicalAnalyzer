@@ -196,7 +196,7 @@ public class JavaLex {
 	}
 	
 	public boolean hasNextWord() {
-		if (this.scanner.hasNext())
+		if ((this.parsingLine != null) || this.scanner.hasNext())
 			return true;
 		else
 			return false;
@@ -209,14 +209,26 @@ public class JavaLex {
 			return false;
 	}
 	private boolean isNum(String num) {
-		boolean result = false;
-		try {
-			Double.parseDouble(num);
-			result = true;
-		} catch (NumberFormatException ex){
-			result = false;
-		}
-		return result;
+//		boolean result = false;
+		if (num.matches("(0(x|X)[\\da-fA-F]*[lL]?)"))
+			return true;
+		else if (num.matches("(0[0-7]*[dDfFlL]?)"))
+			return true;
+		else if (num.matches("[\\d]\\.?[dDfFlL]?"))
+			return true;
+		else if (num.matches("[1-9][\\d]*\\.?[dDfFlL]?"))
+			return true;
+		else if (num.matches("([\\d]|[1-9][\\d]*)?\\.[\\d]+[dDfF]?"))
+			return true;
+		else
+			return false; 
+//			try {
+//				Double.parseDouble(num);
+//				result = true;
+//			} catch (NumberFormatException ex){
+//				result = false;
+//			}
+//		return result;
 	}
 	private boolean isChar(String ch) {
 		if((!isNum(ch)) && (!isSymbol(ch)) && (!isBlank(ch)))
@@ -266,9 +278,10 @@ public class JavaLex {
 	public static void main(String[] args) {
 		try {
 			JavaLex analyzer = new JavaLex(new File("SaxParserApp.java"));
+//			JavaLex analyzer = new JavaLex("08.12d");
 			while (analyzer.hasNextWord())
 				System.out.println(analyzer.nextWord());
-		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

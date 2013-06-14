@@ -1,3 +1,5 @@
+0X123Eaf
+01342
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,6 +25,7 @@ public class SaxParserApp extends DefaultHandler{
 	private String preTag = null;	// 记录解析时的上一个节点名称
 	private HashMap<String,Integer> stocks;	// 存储<股票代号,订购总数>键值对
 	private String parsingStock = null;	// 记录正在解释的股票代号
+	private long a = 1L;
 	
 	public SaxParserApp(){
 		stocks = new HashMap<String,Integer>();
