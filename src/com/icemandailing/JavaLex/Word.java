@@ -60,10 +60,10 @@ public class Word {
 	 * @throws IllegalArgumentException 
 	 */
 	private void setLine(int line) throws IllegalArgumentException {
-		if (line > 0)
+		if (line >= 0)
 			this.line = line;
 		else
-			throw new IllegalArgumentException("Line must be larger than 0");
+			throw new IllegalArgumentException("Line can not be negative");
 	}
 
 	/**
@@ -71,10 +71,10 @@ public class Word {
 	 * @throws IllegalArgumentException 
 	 */
 	private void setRow(int row) throws IllegalArgumentException {
-		if (row > 0)
+		if (row >= 0)
 			this.row = row;
 		else
-			throw new IllegalArgumentException("Row must be larger than 0");
+			throw new IllegalArgumentException("Row can not be negative");
 	}
 
 	/**
@@ -93,5 +93,16 @@ public class Word {
 	private void setValue(String value) {
 		this.value = value;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Word [line=" + line + ", row=" + row + ", type=" + type
+				+ ", value=" + value + "]";
+	}
+	
+	
 	
 }
