@@ -1,5 +1,6 @@
 package com.icemandailing.TextEditor;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import javax.swing.ImageIcon;
@@ -33,20 +35,28 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import com.icemandailing.JavaLex.JavaLex;
+import com.icemandailing.JavaLex.Word;
 
 public class TextEditFrame extends JFrame{
 	
 	private static final long serialVersionUID = 1L;
+	private static SimpleAttributeSet defaultStyle;
+	private static ArrayList<SimpleAttributeSet> styles;
 	
 	private JMenuItem saveitem;
 	private InfoDialog dialog;
-	private JTextArea txtarea;
+	private JTextPane txtarea;
+	private StyledDocument doc;
 	private JPanel txtpanel,countpanel;
 	private JFileChooser chooser,savechooser;
 	private File opened;
@@ -56,6 +66,42 @@ public class TextEditFrame extends JFrame{
 	private JButton bsave;
 	private String charsetName = "UTF-8";
 	
+	static {
+		defaultStyle = new SimpleAttributeSet();
+		StyleConstants.setForeground(defaultStyle, Color.BLACK);
+//		StyleConstants.setBackground(keyWord, Color.YELLOW);
+		StyleConstants.setBold(defaultStyle, false);
+		
+		styles = new ArrayList<SimpleAttributeSet>(6);
+		// default
+		styles.add(new SimpleAttributeSet());
+		StyleConstants.setForeground(styles.get(0), Color.BLACK);
+		StyleConstants.setBold(styles.get(0), false);
+		// KEYWORD
+		styles.add(new SimpleAttributeSet());
+		StyleConstants.setForeground(styles.get(1), new Color(132, 20, 92));	// 132	20	92		
+		StyleConstants.setBold(styles.get(1), false);
+		// IDENTIFIER
+		styles.add(new SimpleAttributeSet());
+		StyleConstants.setForeground(styles.get(2), new Color(6, 24, 100));	// 6	24	194			
+		StyleConstants.setBold(styles.get(2), false);
+		// OPERATOR
+		styles.add(new SimpleAttributeSet());
+		StyleConstants.setForeground(styles.get(3), new Color(197, 134, 58));	// 197	134	58				
+		StyleConstants.setBold(styles.get(3), false);
+		// CONSTANT
+		styles.add(new SimpleAttributeSet());
+		StyleConstants.setForeground(styles.get(4), new Color(45, 49, 255));	// 45	49	252					
+		StyleConstants.setBold(styles.get(3), false);
+		// DELIMITER
+		styles.add(new SimpleAttributeSet());
+		StyleConstants.setForeground(styles.get(5), Color.BLACK);	// 45	49	252					
+		StyleConstants.setBold(styles.get(5), false);
+		
+		
+	}
+	
+	@SuppressWarnings({ "serial" })
 	public TextEditFrame()
 	{
 		setTitle("Java Lexical Analyzer");
@@ -217,12 +263,17 @@ public class TextEditFrame extends JFrame{
 		 */
 		txtpanel = new JPanel();
 		txtpanel.setLayout(new BorderLayout());
-		txtarea = new JTextArea();
+		txtarea = new JTextPane() {
+		    public boolean getScrollableTracksViewportWidth() {
+		        return getUI().getPreferredSize(this).width 
+		            <= getParent().getSize().width;
+		    }
+		};
 		Dimension fd = this.getSize();
 		txtarea.setBounds(new Rectangle(fd));
 		txtarea.setBounds(new Rectangle(fd));
-		txtarea.setLineWrap(false);
-		txtarea.setTabSize(4);
+//		txtarea.setLineWrap(false);
+//		txtarea.setTabSize(4);
 		JScrollPane scrolltxt = new JScrollPane(txtarea);
 		txtpanel.add(scrolltxt,BorderLayout.CENTER);
 		
@@ -370,7 +421,11 @@ public class TextEditFrame extends JFrame{
 		public void actionPerformed(ActionEvent e)
 		{
 			
-			txtarea.insert(copied, txtarea.getCaretPosition() );
+			try {
+				doc.insertString(txtarea.getCaretPosition(), copied, defaultStyle);
+			} catch (BadLocationException e1) {
+				e1.printStackTrace();
+			}
 			
 		}
 		
@@ -446,8 +501,7 @@ public class TextEditFrame extends JFrame{
 	{
 		InputStreamReader in;
 		public void actionPerformed(ActionEvent e)
-		{
-			txtarea.setText("");
+		{	
 			int ris = chooser.showOpenDialog(TextEditFrame.this);
 			
 			if(ris == JFileChooser.APPROVE_OPTION)
@@ -466,17 +520,42 @@ public class TextEditFrame extends JFrame{
 				BufferedReader br = new BufferedReader(in);
 				
 				try {
+					txtarea.setText("");
+					doc = txtarea.getStyledDocument();
 					String s = br.readLine();
+					JavaLex analyzer;
 					while( s != null )
 					{
-						if( txtarea.getText() == null ) txtarea.setText( s + "\n" );
-						txtarea.append( s + "\n");
+						analyzer = new JavaLex(s);
+						Word word = null;
+						int row = 0;
+						while (analyzer.hasNextWord()) {
+							word = analyzer.nextWord();
+							if (word != null) {
+								doc.insertString(doc.getLength(), s.substring(row, word.getRow()), styles.get(0));
+//								System.out.print(s.substring(row, word.getRow()));
+								doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
+//								System.out.print(word.getValue());
+								row += word.getRow() - row;
+								row += word.getValue().length();
+							} else {
+								doc.insertString(doc.getLength(), s.substring(row), styles.get(0));
+//								System.out.print(s.substring(row));
+								row = s.length();
+							}
+							
+						}
+						doc.insertString(doc.getLength(), "\n", styles.get(0));
+//						System.out.print("\n");
 						s = br.readLine();
 						
 					}
 				} catch (IOException e1) {
 					e1.printStackTrace();
+				} catch (BadLocationException e1) {
+					e1.printStackTrace();
 				}
+				
 				try {
 					br.close();
 				} catch (IOException e1) {
