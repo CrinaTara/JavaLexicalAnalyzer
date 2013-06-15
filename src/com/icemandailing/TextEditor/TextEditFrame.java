@@ -55,7 +55,7 @@ public class TextEditFrame extends JFrame{
 	
 	private JMenuItem saveitem;
 	private InfoDialog dialog;
-	private JTextPane txtarea;
+	private JTextPane textpane;
 	private StyledDocument doc;
 	private JPanel txtpanel,countpanel;
 	private JFileChooser chooser,savechooser;
@@ -156,7 +156,7 @@ public class TextEditFrame extends JFrame{
 			
 			public void actionPerformed(ActionEvent e)
 			{
-				txtarea.selectAll();
+				textpane.selectAll();
 			}
 			
 		});
@@ -263,21 +263,21 @@ public class TextEditFrame extends JFrame{
 		 */
 		txtpanel = new JPanel();
 		txtpanel.setLayout(new BorderLayout());
-		txtarea = new JTextPane() {
+		textpane = new JTextPane() {
 		    public boolean getScrollableTracksViewportWidth() {
 		        return getUI().getPreferredSize(this).width 
 		            <= getParent().getSize().width;
 		    }
 		};
 		Dimension fd = this.getSize();
-		txtarea.setBounds(new Rectangle(fd));
-		txtarea.setBounds(new Rectangle(fd));
+		textpane.setBounds(new Rectangle(fd));
+		textpane.setBounds(new Rectangle(fd));
 //		txtarea.setLineWrap(false);
 //		txtarea.setTabSize(4);
-		JScrollPane scrolltxt = new JScrollPane(txtarea);
+		JScrollPane scrolltxt = new JScrollPane(textpane);
 		txtpanel.add(scrolltxt,BorderLayout.CENTER);
 		
-		txtarea.addMouseListener(popupListener);
+		textpane.addMouseListener(popupListener);
 		
 		add(txtpanel);
 		
@@ -300,7 +300,7 @@ public class TextEditFrame extends JFrame{
 	private class Lex implements Runnable {
 		private JavaLex analyzer;
 		public void run() {
-			analyzer = new JavaLex(txtarea.getText());
+			analyzer = new JavaLex(textpane.getText());
 			while (true) {
 				if (analyzer.hasNextWord())
 					System.out.println(analyzer.nextWord());
@@ -316,8 +316,8 @@ public class TextEditFrame extends JFrame{
 		{
 			while(true)
 			{
-				if(txtarea.getText() == null) count.setText("0");
-				String s = txtarea.getText();
+				if(textpane.getText() == null) count.setText("0");
+				String s = textpane.getText();
 				StringTokenizer st = new StringTokenizer(s," "+"\n");
 				count.setText( "Words: " + st.countTokens() + " Characters: " + s.length() );
 				try
@@ -408,8 +408,8 @@ public class TextEditFrame extends JFrame{
 		public void actionPerformed(ActionEvent e)
 		{
 			
-			copied = txtarea.getSelectedText();
-			txtarea.replaceSelection("");
+			copied = textpane.getSelectedText();
+			textpane.replaceSelection("");
 			
 		}
 		
@@ -422,7 +422,7 @@ public class TextEditFrame extends JFrame{
 		{
 			
 			try {
-				doc.insertString(txtarea.getCaretPosition(), copied, defaultStyle);
+				doc.insertString(textpane.getCaretPosition(), copied, defaultStyle);
 			} catch (BadLocationException e1) {
 				e1.printStackTrace();
 			}
@@ -437,7 +437,7 @@ public class TextEditFrame extends JFrame{
 		public void actionPerformed(ActionEvent e)
 		{
 			
-			copied = txtarea.getSelectedText();
+			copied = textpane.getSelectedText();
 			
 		}
 		
@@ -462,7 +462,7 @@ public class TextEditFrame extends JFrame{
 					e1.printStackTrace();
 				}
 				PrintWriter scrivi = new PrintWriter(filew);
-				scrivi.print(txtarea.getText());
+				scrivi.print(textpane.getText());
 				scrivi.close();
 				
 			}
@@ -487,7 +487,7 @@ public class TextEditFrame extends JFrame{
 			} 
 			PrintWriter scrivi = new PrintWriter(filew);
 			
-			String ris = txtarea.getText();
+			String ris = textpane.getText();
 			
 			scrivi.print(ris);
 			
@@ -520,8 +520,8 @@ public class TextEditFrame extends JFrame{
 				BufferedReader br = new BufferedReader(in);
 				
 				try {
-					txtarea.setText("");
-					doc = txtarea.getStyledDocument();
+					textpane.setText("");
+					doc = textpane.getStyledDocument();
 					String s = br.readLine();
 					JavaLex analyzer;
 					while( s != null )
@@ -548,8 +548,8 @@ public class TextEditFrame extends JFrame{
 						doc.insertString(doc.getLength(), "\n", styles.get(0));
 //						System.out.print("\n");
 						s = br.readLine();
-						
 					}
+					
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				} catch (BadLocationException e1) {
