@@ -2,6 +2,7 @@ package com.icemandailing.TextEditor;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -21,8 +22,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
+import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -40,6 +43,8 @@ import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
@@ -49,27 +54,31 @@ import com.icemandailing.JavaLex.Word;
 
 public class TextEditFrame extends JFrame{
 	
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 623L;
 	private static SimpleAttributeSet defaultStyle;
 	private static ArrayList<SimpleAttributeSet> styles;
 	
 	private JMenuItem saveitem;
 	private InfoDialog dialog;
-	private JTextPane textpane;
+	private JTextPane textPane;
 	private StyledDocument doc;
-	private JPanel txtpanel,countpanel;
+	private JPanel mainPane,countpanel;
 	private JFileChooser chooser,savechooser;
 	private File opened;
-	private String copied;
 	private JPopupMenu popup;
 	private JLabel count;
 	private JButton bsave;
 	private String charsetName = "UTF-8";
+    private String newline = "\n";
+    private HashMap<Object, Action> actions;
+
 	
+    /**
+     * Setup all styles
+     */
 	static {
 		defaultStyle = new SimpleAttributeSet();
 		StyleConstants.setForeground(defaultStyle, Color.BLACK);
-//		StyleConstants.setBackground(keyWord, Color.YELLOW);
 		StyleConstants.setBold(defaultStyle, false);
 		
 		styles = new ArrayList<SimpleAttributeSet>(6);
@@ -79,130 +88,142 @@ public class TextEditFrame extends JFrame{
 		StyleConstants.setBold(styles.get(0), false);
 		// KEYWORD
 		styles.add(new SimpleAttributeSet());
-		StyleConstants.setForeground(styles.get(1), new Color(132, 20, 92));	// 132	20	92		
+		StyleConstants.setForeground(styles.get(1), new Color(132, 20, 92));		
 		StyleConstants.setBold(styles.get(1), false);
 		// IDENTIFIER
 		styles.add(new SimpleAttributeSet());
-		StyleConstants.setForeground(styles.get(2), new Color(6, 24, 100));	// 6	24	194			
+		StyleConstants.setForeground(styles.get(2), new Color(6, 24, 100));			
 		StyleConstants.setBold(styles.get(2), false);
 		// OPERATOR
 		styles.add(new SimpleAttributeSet());
-		StyleConstants.setForeground(styles.get(3), new Color(197, 134, 58));	// 197	134	58				
+		StyleConstants.setForeground(styles.get(3), new Color(197, 134, 58));				
 		StyleConstants.setBold(styles.get(3), false);
 		// CONSTANT
 		styles.add(new SimpleAttributeSet());
-		StyleConstants.setForeground(styles.get(4), new Color(45, 49, 255));	// 45	49	252					
+		StyleConstants.setForeground(styles.get(4), new Color(45, 49, 255));					
 		StyleConstants.setBold(styles.get(3), false);
 		// DELIMITER
 		styles.add(new SimpleAttributeSet());
-		StyleConstants.setForeground(styles.get(5), Color.BLACK);	// 45	49	252					
+		StyleConstants.setForeground(styles.get(5), Color.BLACK);					
 		StyleConstants.setBold(styles.get(5), false);
-		
-		
 	}
 	
-	@SuppressWarnings({ "serial" })
 	public TextEditFrame()
 	{
 		setTitle("Java Lexical Analyzer");
 		setSize(800,600);
 		centerFrame();
+		
+		mainPane = new JPanel();
+		mainPane.setLayout(new BorderLayout());
+		textPane = new JTextPane() {
+		    /**
+			 * Create a no wrap JTextPane
+			 */
+			private static final long serialVersionUID = 4654545721459475642L;
+
+			public boolean getScrollableTracksViewportWidth() {
+		        return getUI().getPreferredSize(this).width 
+		            <= getParent().getSize().width;
+		    }
+		};
+		
 		/*
 		 * Menu
 		 */
+		actions = createActionTable(textPane);
 		JMenuBar menu = new JMenuBar();
 		setJMenuBar(menu);
-		JMenu filemenu = new JMenu("File");
-		menu.add(filemenu);
+		JMenu fileMenu = new JMenu("File");
+		menu.add(fileMenu);
 		
 		JMenuItem openitem = new JMenuItem("Open",new ImageIcon("img/open.png"));
 		chooser = new JFileChooser();
-		chooser.setFileFilter(new TxtFilter());
+		chooser.setFileFilter(new JavaSourceFilter());
 		openitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
 		openitem.addActionListener( new FileOpenListener() );
-		filemenu.add(openitem);
+		fileMenu.add(openitem);
 		
 		saveitem = new JMenuItem("Save",new ImageIcon("img/save.png"));
 		saveitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
 		saveitem.addActionListener(new FileSaveListener());
-		filemenu.add(saveitem);
+		fileMenu.add(saveitem);
 		saveitem.setEnabled(false);
 		
 		JMenuItem saveasitem = new JMenuItem("Save As",new ImageIcon("img/saveas.png"));
 		savechooser = new JFileChooser();
-		savechooser.setFileFilter(new TxtFilter());
+		savechooser.setFileFilter(new JavaSourceFilter());
 		saveasitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
 		saveasitem.addActionListener(new FileSaveAsListener());
-		filemenu.add(saveasitem);
+		fileMenu.add(saveasitem);
 		
-		filemenu.addSeparator();
+		fileMenu.addSeparator();
 		
 		JMenuItem exititem = new JMenuItem("Exit",new ImageIcon("img/exit.png"));
 		exititem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
-		exititem.addActionListener( new ActionListener(){
+		exititem.addActionListener( new ActionListener() {
 			public void actionPerformed(ActionEvent e)
 			{
 				System.exit(0);
 			}
 		} );
-		filemenu.add(exititem);
+		fileMenu.add(exititem);
 		
-		JMenu modmenu = new JMenu("Edit");
-		menu.add(modmenu);
+		JMenu editMenu = new JMenu("Edit");
+		menu.add(editMenu);
 		
 		JMenuItem selectitem = new JMenuItem("Select All");
 		selectitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_MASK));
-		selectitem.addActionListener(new ActionListener(){
-			
-			public void actionPerformed(ActionEvent e)
-			{
-				textpane.selectAll();
-			}
-			
-		});
-		modmenu.add(selectitem);
+		selectitem.addActionListener(getActionByName(DefaultEditorKit.selectAllAction));
+		editMenu.add(selectitem);
 		
-		modmenu.addSeparator();
+		editMenu.addSeparator();
 		
 		JMenuItem cutitem = new JMenuItem("Cut",new ImageIcon("img/cut.png"));
 		cutitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_MASK));
-		cutitem.addActionListener(new CutListener());
-		modmenu.add(cutitem);
+		cutitem.addActionListener(getActionByName(DefaultEditorKit.cutAction));
+		editMenu.add(cutitem);
 		
 		JMenuItem copyitem = new JMenuItem("Copy",new ImageIcon("img/copy.png"));
 		copyitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK));
-		copyitem.addActionListener(new CopyListener());
-		modmenu.add(copyitem);
+		copyitem.addActionListener(getActionByName(DefaultEditorKit.copyAction));
+		editMenu.add(copyitem);
 		
 		JMenuItem pasteitem = new JMenuItem("Paste",new ImageIcon("img/paste.png"));
 		pasteitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK));
-		pasteitem.addActionListener(new PasteListener());
-		modmenu.add(pasteitem);
+		pasteitem.addActionListener(getActionByName(DefaultEditorKit.pasteAction));
+		editMenu.add(pasteitem);
 		
-		JMenu infmenu = new JMenu("?");
-		menu.add(infmenu);
+		JMenu infomenu = new JMenu("?");
+		menu.add(infomenu);
 		
-		JMenuItem infitem = new JMenuItem("Info",new ImageIcon("img/info.png"));
-		infitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_MASK));
-		infitem.addActionListener(new InfoListener());
-		infmenu.add(infitem);
+		JMenuItem infoitem = new JMenuItem("Info",new ImageIcon("img/info.png"));
+		infoitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_MASK));
+		infoitem.addActionListener(new InfoListener());
+		infomenu.add(infoitem);
 		
+		/*
+		 * Popup menu
+		 */
 		popup = new JPopupMenu();
 		
-		JMenuItem taglia = new JMenuItem("Cut",new ImageIcon("img/cut.png"));
-		taglia.addActionListener(new CutListener());
-		popup.add(taglia);
+		JMenuItem cut = new JMenuItem("Cut",new ImageIcon("img/cut.png"));
+		cut.addActionListener(getActionByName(DefaultEditorKit.cutAction));
+		popup.add(cut);
 		
-		JMenuItem copia = new JMenuItem("Copy",new ImageIcon("img/copy.png"));
-		copia.addActionListener(new CopyListener());
-		popup.add(copia);
+		JMenuItem copy = new JMenuItem("Copy",new ImageIcon("img/copy.png"));
+		copy.addActionListener(getActionByName(DefaultEditorKit.copyAction));
+		popup.add(copy);
 		
-		JMenuItem incolla = new JMenuItem("Paste",new ImageIcon("img/paste.png"));
-		incolla.addActionListener(new PasteListener());
-		popup.add(incolla);
+		JMenuItem paste = new JMenuItem("Paste",new ImageIcon("img/paste.png"));
+		paste.addActionListener(getActionByName(DefaultEditorKit.pasteAction));
+		popup.add(paste);
 		
 		MouseListener popupListener = new PopupListener();
 		
+		/*
+		 * Tool Bar
+		 */
 		JToolBar tools = new JToolBar("Tools");
 		
 		JButton bopenf = new JButton(new ImageIcon("img/open.png"));
@@ -224,17 +245,17 @@ public class TextEditFrame extends JFrame{
 		tools.addSeparator();
 		
 		JButton bcut = new JButton(new ImageIcon("img/cut.png"));
-		bcut.addActionListener(new CutListener());
+		bcut.addActionListener(getActionByName(DefaultEditorKit.cutAction));
 		bcut.setToolTipText("Cut");
 		tools.add(bcut);
 		
 		JButton bcopy = new JButton(new ImageIcon("img/copy.png"));
-		bcopy.addActionListener(new CopyListener());
+		bcopy.addActionListener(getActionByName(DefaultEditorKit.copyAction));
 		bcopy.setToolTipText("Copy");
 		tools.add(bcopy);
 		
 		JButton bpaste = new JButton(new ImageIcon("img/paste.png"));
-		bpaste.addActionListener(new PasteListener());
+		bpaste.addActionListener(getActionByName(DefaultEditorKit.pasteAction));
 		bpaste.setToolTipText("Paste");
 		tools.add(bpaste);
 		
@@ -261,25 +282,13 @@ public class TextEditFrame extends JFrame{
 		/*
 		 * Panel JTextArea
 		 */
-		txtpanel = new JPanel();
-		txtpanel.setLayout(new BorderLayout());
-		textpane = new JTextPane() {
-		    public boolean getScrollableTracksViewportWidth() {
-		        return getUI().getPreferredSize(this).width 
-		            <= getParent().getSize().width;
-		    }
-		};
 		Dimension fd = this.getSize();
-		textpane.setBounds(new Rectangle(fd));
-		textpane.setBounds(new Rectangle(fd));
-//		txtarea.setLineWrap(false);
-//		txtarea.setTabSize(4);
-		JScrollPane scrolltxt = new JScrollPane(textpane);
-		txtpanel.add(scrolltxt,BorderLayout.CENTER);
-		
-		textpane.addMouseListener(popupListener);
-		
-		add(txtpanel);
+		textPane.setBounds(new Rectangle(fd));
+        textPane.setMargin(new Insets(5,5,5,5));
+		JScrollPane scrolltxt = new JScrollPane(textPane);
+		mainPane.add(scrolltxt,BorderLayout.CENTER);
+		textPane.addMouseListener(popupListener);
+		add(mainPane);
 		
 		countpanel = new JPanel();
 		count = new JLabel();
@@ -293,14 +302,12 @@ public class TextEditFrame extends JFrame{
 		Thread lexThread = new Thread(lex);
 		lexThread.start();
 		
-		
-		
 	}
 	
 	private class Lex implements Runnable {
 		private JavaLex analyzer;
 		public void run() {
-			analyzer = new JavaLex(textpane.getText());
+			analyzer = new JavaLex(textPane.getText());
 			while (true) {
 				if (analyzer.hasNextWord())
 					System.out.println(analyzer.nextWord());
@@ -316,9 +323,9 @@ public class TextEditFrame extends JFrame{
 		{
 			while(true)
 			{
-				if(textpane.getText() == null) count.setText("0");
-				String s = textpane.getText();
-				StringTokenizer st = new StringTokenizer(s," "+"\n");
+				if(textPane.getText() == null) count.setText("0");
+				String s = textPane.getText();
+				StringTokenizer st = new StringTokenizer(s," "+newline);
 				count.setText( "Words: " + st.countTokens() + " Characters: " + s.length() );
 				try
 				{
@@ -331,39 +338,6 @@ public class TextEditFrame extends JFrame{
 			}
 			
 			
-		}
-		
-	}
-	
-	private class PopupListener extends MouseAdapter 
-	{
-	    public void mousePressed(MouseEvent e)
-	    {
-	        maybeShowPopup(e);
-	    }
-
-	    public void mouseReleased(MouseEvent e)
-	    {
-	        maybeShowPopup(e);
-	    }
-
-	    private void maybeShowPopup(MouseEvent e)
-	    {
-	        if (e.isPopupTrigger())
-	        {
-	            popup.show(e.getComponent(), e.getX(), e.getY());
-	        }
-	    }
-	}
-	
-	private class InfoListener implements ActionListener
-	{
-		
-		public void actionPerformed(ActionEvent e)
-		{
-			if (dialog == null) dialog = new InfoDialog(TextEditFrame.this);
-			dialog.setVisible(true);
-						
 		}
 		
 	}
@@ -402,47 +376,40 @@ public class TextEditFrame extends JFrame{
 		setLocation ((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
 	}
 	
-	private class CutListener implements ActionListener
+	
+	private class PopupListener extends MouseAdapter 
+	{
+	    public void mousePressed(MouseEvent e)
+	    {
+	        maybeShowPopup(e);
+	    }
+	
+	    public void mouseReleased(MouseEvent e)
+	    {
+	        maybeShowPopup(e);
+	    }
+	
+	    private void maybeShowPopup(MouseEvent e)
+	    {
+	        if (e.isPopupTrigger())
+	        {
+	            popup.show(e.getComponent(), e.getX(), e.getY());
+	        }
+	    }
+	}
+
+	private class InfoListener implements ActionListener
 	{
 		
 		public void actionPerformed(ActionEvent e)
 		{
-			
-			copied = textpane.getSelectedText();
-			textpane.replaceSelection("");
-			
+			if (dialog == null) dialog = new InfoDialog(TextEditFrame.this);
+			dialog.setVisible(true);
+						
 		}
 		
 	}
-	
-	private class PasteListener implements ActionListener
-	{
-		
-		public void actionPerformed(ActionEvent e)
-		{
-			
-			try {
-				doc.insertString(textpane.getCaretPosition(), copied, defaultStyle);
-			} catch (BadLocationException e1) {
-				e1.printStackTrace();
-			}
-			
-		}
-		
-	}
-	
-	private class CopyListener implements ActionListener
-	{
-		
-		public void actionPerformed(ActionEvent e)
-		{
-			
-			copied = textpane.getSelectedText();
-			
-		}
-		
-	}
-	
+
 	private class FileSaveAsListener implements ActionListener
 	{
 		
@@ -462,7 +429,7 @@ public class TextEditFrame extends JFrame{
 					e1.printStackTrace();
 				}
 				PrintWriter scrivi = new PrintWriter(filew);
-				scrivi.print(textpane.getText());
+				scrivi.print(textPane.getText());
 				scrivi.close();
 				
 			}
@@ -487,7 +454,7 @@ public class TextEditFrame extends JFrame{
 			} 
 			PrintWriter scrivi = new PrintWriter(filew);
 			
-			String ris = textpane.getText();
+			String ris = textPane.getText();
 			
 			scrivi.print(ris);
 			
@@ -520,8 +487,8 @@ public class TextEditFrame extends JFrame{
 				BufferedReader br = new BufferedReader(in);
 				
 				try {
-					textpane.setText("");
-					doc = textpane.getStyledDocument();
+					textPane.setText("");
+					doc = textPane.getStyledDocument();
 					String s = br.readLine();
 					JavaLex analyzer;
 					while( s != null )
@@ -545,10 +512,11 @@ public class TextEditFrame extends JFrame{
 							}
 							
 						}
-						doc.insertString(doc.getLength(), "\n", styles.get(0));
-//						System.out.print("\n");
+						doc.insertString(doc.getLength(),  newline, styles.get(0));
+//						System.out.print(newline);
 						s = br.readLine();
 					}
+					textPane.setCaretPosition(0);	// jump to the begin of the new file 
 					
 				} catch (IOException e1) {
 					e1.printStackTrace();
@@ -567,7 +535,7 @@ public class TextEditFrame extends JFrame{
 		
 	}
 	
-	private class TxtFilter extends FileFilter
+	private class JavaSourceFilter extends FileFilter
 	{
 		
 		public boolean accept(File f) 
@@ -589,5 +557,21 @@ public class TextEditFrame extends JFrame{
 		return st.countTokens();
 		
 	}
+	
+    //The following two methods allow us to find an
+    //action provided by the editor kit by its name.
+    private HashMap<Object, Action> createActionTable(JTextComponent textComponent) {
+        HashMap<Object, Action> actions = new HashMap<Object, Action>();
+        Action[] actionsArray = textComponent.getActions();
+        for (int i = 0; i < actionsArray.length; i++) {
+            Action a = actionsArray[i];
+            actions.put(a.getValue(Action.NAME), a);
+        }
+	return actions;
+    }
+
+    private Action getActionByName(String name) {
+        return actions.get(name);
+    }
 	
 }
