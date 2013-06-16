@@ -59,7 +59,7 @@ public class Word {
 	 * @param line the line to set
 	 * @throws IllegalArgumentException 
 	 */
-	private void setLine(int line) throws IllegalArgumentException {
+	public void setLine(int line) throws IllegalArgumentException {
 		if (line >= 0)
 			this.line = line;
 		else
@@ -70,7 +70,7 @@ public class Word {
 	 * @param row the row to set
 	 * @throws IllegalArgumentException 
 	 */
-	private void setRow(int row) throws IllegalArgumentException {
+	public void setRow(int row) throws IllegalArgumentException {
 		if (row >= 0)
 			this.row = row;
 		else
@@ -80,7 +80,7 @@ public class Word {
 	/**
 	 * @param type the type to set
 	 */
-	private void setType(int type) {
+	public void setType(int type) {
 		if (type >= KEYWORD && type <= DELIMITER)
 			this.type = type;
 		else 
@@ -90,7 +90,7 @@ public class Word {
 	/**
 	 * @param value the value to set
 	 */
-	private void setValue(String value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 

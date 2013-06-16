@@ -15,8 +15,11 @@ import java.util.Scanner;
 public class JavaLex {
 	
 	private int line = -1;
-	private int rowInParsingLine = 0;
+	private int rowInParsingLine = 0;	// point to the begin row of a word
+	private int index = 0;	// point to the row of NEXT CHARACTER
 	private String parsingLine = null;
+	private String wordValue = "";	// value of word
+	private String nextChar = null;
 	private InputStream source = null;
 	private Scanner scanner = null;
 	
@@ -27,6 +30,11 @@ public class JavaLex {
 	private static final String OPERATOR_LIST_PATH = "data/operator_list.txt";
 	private static final HashSet<String> delimiters;
 	private static final String DELIMITER_LIST_PATH = "data/delimiter_list.txt";
+	private static final String NUM_CHAR = "[\\d]";
+	private static final String OCT_CHAR = "[0-7]";
+	private static final String HEX_CHAR = "[0-9a-fA-F]";
+	private static final String INT_SUFFIX = "[lL]";
+	private static final String REAL_SUFFIX = "[DdFf]";
 	
 
 	/**
@@ -86,6 +94,7 @@ public class JavaLex {
 	public void reset(){
 		this.line = -1;
 		this.rowInParsingLine = 0;
+		this.index = 0;
 		this.parsingLine = null;
 		this.scanner = null;
 		this.source = null;
@@ -195,6 +204,107 @@ public class JavaLex {
 		return word;
 	}
 	
+	public Word getNextWord() {
+		this.rowInParsingLine = index;
+		int beginLine = this.line;
+		if (this.nextChar == null)
+			this.nextChar = getNextChar();
+		Word word = null;
+		String value = "";
+		
+		if (nextChar.matches(NUM_CHAR)) {
+			value = value.concat(nextChar);
+			
+			if (nextChar.equals("0")) {	// hex, oct(real) or 0(real)
+				nextChar = getNextChar();
+				if (nextChar.toLowerCase().equals("x")) {	// hex
+					value = value.concat(nextChar);
+					while ((nextChar = getNextChar()).matches(HEX_CHAR)) {
+						value = value.concat(nextChar);
+					}
+					
+					if (nextChar.matches(INT_SUFFIX)) {	// end: set nextChar null
+						value = value.concat(nextChar);
+						nextChar = null;
+					}
+					
+					word = new Word(beginLine, this.rowInParsingLine, Word.CONSTANT, value);
+					
+				} else if (nextChar.matches(OCT_CHAR)) {	// oct(real)
+					value = value.concat(nextChar);
+					while ((nextChar = getNextChar()).matches(OCT_CHAR)) {
+						value = value.concat(nextChar);
+					}
+					
+					if (nextChar.equals(".")) {	// real
+						value = value.concat(nextChar);
+						while ((nextChar = getNextChar()).matches(NUM_CHAR)) {
+							value = value.concat(nextChar);
+						}
+						if (nextChar.matches(REAL_SUFFIX)) {	// end: set nextChar null
+							value = value.concat(nextChar);
+							nextChar = null;
+						}
+					} else if (nextChar.matches(REAL_SUFFIX) || nextChar.matches(INT_SUFFIX)) {	// oct; end: set nextChar null
+						value = value.concat(nextChar);
+						nextChar = null;
+					}	
+					word = new Word(beginLine, this.rowInParsingLine, Word.CONSTANT, value);
+				} else {	// 0
+					if (nextChar.equals(".")) {	// real
+						value = value.concat(nextChar);
+						while ((nextChar = getNextChar()).matches(NUM_CHAR)) {
+							value = value.concat(nextChar);
+						}
+						if (nextChar.matches(REAL_SUFFIX)) {	// end: set nextChar null
+							value = value.concat(nextChar);
+							nextChar = null;
+						}
+					} else if (nextChar.matches(REAL_SUFFIX) || nextChar.matches(INT_SUFFIX)) {	// 0; end: set nextChar null
+						value = value.concat(nextChar);
+						nextChar = null;
+					}	
+					word = new Word(beginLine, this.rowInParsingLine, Word.CONSTANT, value);
+				}
+			}
+		} else {
+			nextChar = getNextChar();
+		}
+			
+		return word;
+	}
+	
+	/**
+	 * 
+	 * @return : the next character
+	 * 
+	 * return null when there is no more character.
+	 * 
+	 */
+	
+	public String getNextChar() {
+		while (this.parsingLine == null || this.parsingLine.trim().isEmpty()) {
+			if (this.scanner.hasNextLine()) {
+				this.parsingLine = this.scanner.nextLine();
+				this.rowInParsingLine = 0;
+				this.index = 0;
+				this.line++;
+			} else {
+				return null;
+			}
+			return "\n";
+		}
+		
+		String ch = this.parsingLine.substring(index, index+1);
+		index++;
+		
+		if (index == this.parsingLine.length()) {
+			this.parsingLine = null;
+		}
+		return ch;
+		
+	}
+	
 	public boolean hasNextWord() {
 		if ((this.parsingLine != null) || this.scanner.hasNext())
 			return true;
@@ -276,11 +386,28 @@ public class JavaLex {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+//		double a = 02341;
+//		System.out.print(a);
+		
+//		try {
+//			JavaLex analyzer = new JavaLex(new File("SaxParserApp.java"));
+//			String nextChar;
+//			do {
+//				nextChar = analyzer.getNextChar();
+//				System.out.println(analyzer.line + "\t" + analyzer.index + "\t" + nextChar);
+//			} while (nextChar != null);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+		
 		try {
-			JavaLex analyzer = new JavaLex(new File("SaxParserApp.java"));
-//			JavaLex analyzer = new JavaLex("08.12d");
-			while (analyzer.hasNextWord())
-				System.out.println(analyzer.nextWord());
+			JavaLex analyzer = new JavaLex("0123123.123123asdfasdf");
+//			while (analyzer.hasNextWord()) {
+				System.out.println(analyzer.getNextWord());
+				System.out.println(analyzer.getNextWord());
+				System.out.println(analyzer.getNextWord());
+
+//			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
