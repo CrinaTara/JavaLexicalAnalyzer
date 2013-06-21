@@ -102,7 +102,7 @@ public class Word {
 	@Override
 	public String toString() {
 		return "Word [line=" + line + ", row=" + row + ", type=" + type
-				+ ", value=" + value + "]";
+				+ ", value=\"" + value + "\"]";
 	}
 	
 	

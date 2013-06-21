@@ -35,6 +35,7 @@ public class JavaLex {
 	private static final String INT_SUFFIX = "[lL]";
 	private static final String REAL_SUFFIX = "[DdFf]";
 	private static final String STRING_DELIMITER = "[\"\']";	
+	private static final String IDENTIFIER_CHAR = "[_a-zA-Z]";
 
 	/**
 	 * 
@@ -210,7 +211,7 @@ public class JavaLex {
 	 * use nextWord() to filter null out.
 	 */
 	public Word getNextWord() {
-		this.rowInParsingLine = index;
+		this.rowInParsingLine = index-1;
 		int beginLine = this.line;
 		if (this.nextChar == null)
 			this.nextChar = getNextChar();
@@ -382,6 +383,17 @@ public class JavaLex {
 			} else {
 				word = new Word(beginLine, this.rowInParsingLine, Word.UNDEFINED, value);
 			}
+		} else if (this.nextChar.matches(IDENTIFIER_CHAR)) {
+			value = value.concat(this.nextChar);
+			while ((this.nextChar = getNextChar()).matches(IDENTIFIER_CHAR) || this.nextChar.matches(NUM_CHAR)) {
+				value = value.concat(this.nextChar);
+			}
+			
+			if (isKeyword(value))
+				word = new Word(beginLine, this.rowInParsingLine, Word.KEYWORD, value);
+			else
+				word = new Word(beginLine, this.rowInParsingLine, Word.IDENTIFIER, value);
+			
 		} else {
 			nextChar = getNextChar();
 		}
@@ -447,13 +459,6 @@ public class JavaLex {
 			return true;
 		else
 			return false; 
-//			try {
-//				Double.parseDouble(num);
-//				result = true;
-//			} catch (NumberFormatException ex){
-//				result = false;
-//			}
-//		return result;
 	}
 	private boolean isChar(String ch) {
 		if((!isNum(ch)) && (!isSymbol(ch)) && (!isBlank(ch)))
@@ -493,16 +498,13 @@ public class JavaLex {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-//		double a = 02341;
-//		System.out.print(a);
-		
+
 //		try {
-//			JavaLex analyzer = new JavaLex(new File("SaxParserApp.java"));
-//			String nextChar;
-//			do {
-//				nextChar = analyzer.getNextChar();
-//				System.out.println(analyzer.line + "\t" + analyzer.index + "\t" + nextChar);
-//			} while (nextChar != null);
+//			JavaLex analyzer1 = new JavaLex(new File("test.txt"));
+//			while (analyzer1.hasNextWord()) {
+//				System.out.println(analyzer1.nextWord());
+//
+//			}
 //		} catch (Exception e) {
 //			e.printStackTrace();
 //		}
@@ -510,8 +512,6 @@ public class JavaLex {
 		try {
 			JavaLex analyzer = new JavaLex(new File("test.txt"));
 			while (analyzer.hasNextWord()) {
-//				System.out.println(analyzer.getNextWord());
-//				System.out.println(analyzer.getNextWord());
 				System.out.println(analyzer.getNextWord());
 
 			}
