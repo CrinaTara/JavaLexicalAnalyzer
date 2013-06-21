@@ -110,103 +110,25 @@ public class JavaLex {
 		this.scanner = new Scanner(this.source);
 	}
 	
+	/**
+	 * 
+	 * @return a Word object or null when no more word
+	 */
+	
 	public Word nextWord() {
-		Word word = null;
-		String value = "";
-		
-		while (this.parsingLine == null || this.parsingLine.trim().isEmpty()) {
-			this.parsingLine = this.scanner.nextLine();
-			this.rowInParsingLine = 0;
-			this.line++;
-		}
-		
-		int index = this.rowInParsingLine;
-		String ch = this.parsingLine.substring(index, index+1);
-		
-		while (isBlank(ch) && (index+1 < this.parsingLine.length())) {
-			index = ++(this.rowInParsingLine);
-			ch = this.parsingLine.substring(index, index+1);
-		}
-		
-		if (isChar(ch)) {
-			value = value.concat(ch);
-			index++;
-			while(index < this.parsingLine.length()) {
-				ch = this.parsingLine.substring(index, index+1);
-				if (isChar(ch) || isNum(ch)) {
-					value = value.concat(ch);
-					index++;
-				} else {
-					break;
-				}
-			}
-			
-			if (isKeyword(value))
-				word = new Word(this.line, this.rowInParsingLine, Word.KEYWORD, value);
+		Word word  = this.getNextWord();
+		while (word == null) {
+			if (this.hasNextWord())
+				word = this.getNextWord();
 			else
-				word = new Word(this.line, this.rowInParsingLine, Word.IDENTIFIER, value);
-			
-			this.rowInParsingLine = index;
-			
-		} else if (isNum(ch)) {
-			value = value.concat(ch);
-			index++;
-			while (index < this.parsingLine.length()) {
-				ch = this.parsingLine.substring(index, index+1);
-				if (isNum(value.concat(ch))) {
-					value = value.concat(ch);
-					index++;
-				} else {
-					break;
-				}
-			}
-			
-			word = new Word(this.line, this.rowInParsingLine, Word.CONSTANT, value);
-			this.rowInParsingLine = index;
-			
-		} else if (isSymbol(ch)) {
-			value = value.concat(ch);
-			index++;
-			
-			while (index < this.parsingLine.length()) {
-				ch = this.parsingLine.substring(index, index+1);
-				
-				if (isDelimiter(value.concat(ch)) || isOperator(value.concat(ch))) {
-					value = value.concat(ch);
-					index++;
-				} else {
-					break;
-				}
-			}
-			
-			if (isDelimiter(value))
-				word = new Word(this.line, this.rowInParsingLine, Word.DELIMITER, value);
-			else if (isOperator(value))
-				word  = new Word(this.line, this.rowInParsingLine, Word.OPERATOR, value);
-			else
-				try {
-					throw new Exception("Can not parse a word");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			
-			this.rowInParsingLine = index;
-			
-		} else {
-			index = (++this.rowInParsingLine);
+				break;
 		}
-		
-		if (index == this.parsingLine.length()) {
-			this.parsingLine = null;
-			this.rowInParsingLine = 0;
-		}
-		
 		return word;
 	}
 	
 	/**
 	 * 
-	 * @return : a word or null
+	 * @return : a Word object or null when scanner meet blank character 
 	 * 
 	 * use nextWord() to filter null out.
 	 */
@@ -418,6 +340,7 @@ public class JavaLex {
 				this.index = 0;
 				this.line++;
 			} else {
+				this.parsingLine = null;
 				return "";
 			}
 			return "\n";
@@ -445,34 +368,7 @@ public class JavaLex {
 		else
 			return false;
 	}
-	private boolean isNum(String num) {
-//		boolean result = false;
-		if (num.matches("(0(x|X)[\\da-fA-F]*[lL]?)"))
-			return true;
-		else if (num.matches("(0[0-7]*[dDfFlL]?)"))
-			return true;
-		else if (num.matches("[\\d]\\.?[dDfFlL]?"))
-			return true;
-		else if (num.matches("[1-9][\\d]*\\.?[dDfFlL]?"))
-			return true;
-		else if (num.matches("([\\d]|[1-9][\\d]*)?\\.[\\d]+[dDfF]?"))
-			return true;
-		else
-			return false; 
-	}
-	private boolean isChar(String ch) {
-		if((!isNum(ch)) && (!isSymbol(ch)) && (!isBlank(ch)))
-			return true;
-		else
-			return false;
-	}
-	private boolean isBlank(String ch) {
-		String temp = ch.trim();
-		if (temp.isEmpty())
-			return true;
-		else
-			return false;
-	}
+	
 	private boolean isSymbol(String ch) {
 		if ((ch.length() == 1) && (JavaLex.delimiters.contains(ch) || JavaLex.operators.contains(ch)))
 			return true;
@@ -498,22 +394,11 @@ public class JavaLex {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-
-//		try {
-//			JavaLex analyzer1 = new JavaLex(new File("test.txt"));
-//			while (analyzer1.hasNextWord()) {
-//				System.out.println(analyzer1.nextWord());
-//
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
 		
 		try {
 			JavaLex analyzer = new JavaLex(new File("test.txt"));
 			while (analyzer.hasNextWord()) {
-				System.out.println(analyzer.getNextWord());
-
+				System.out.println(analyzer.nextWord());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
