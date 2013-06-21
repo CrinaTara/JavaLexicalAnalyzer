@@ -1,6 +1,9 @@
-0
-123123d
-12.34f
-0x4534acfd
-000.19999
-00099234.3df
+/**
+ * @author 石夏星（1006840532）
+ * 如无法正常编译、运行，请联系：starsasumi@gmail.com
+ *
+ */
+public class SaxParserApp extends DefaultHandler{
+	double a = .1231d;
+	private String preTag = null;	// 记录解析时的上一个节点名称
+	private HashMap<String,Integer> stocks;	// 存储<股票代号,订购总数>键值对

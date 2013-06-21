@@ -14,11 +14,13 @@ public class Word {
 	/**
 	 * Here is all types that a Word object could be.
 	 */
+	public static final int UNDEFINED = 0;
 	public static final int KEYWORD = 1;
 	public static final int IDENTIFIER = 2;
 	public static final int OPERATOR = 3;
 	public static final int CONSTANT = 4;
 	public static final int DELIMITER = 5;
+	public static final int COMMENT = 6;
 	
 	public Word(int line, int row, int type, String value){
 		setLine(line);
@@ -81,7 +83,7 @@ public class Word {
 	 * @param type the type to set
 	 */
 	public void setType(int type) {
-		if (type >= KEYWORD && type <= DELIMITER)
+		if (type >= KEYWORD && type <= COMMENT)
 			this.type = type;
 		else 
 			throw new IllegalArgumentException("Illegal type");

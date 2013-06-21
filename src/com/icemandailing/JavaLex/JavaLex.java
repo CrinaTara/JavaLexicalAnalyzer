@@ -18,14 +18,13 @@ public class JavaLex {
 	private int rowInParsingLine = 0;	// point to the begin row of a word
 	private int index = 0;	// point to the row of NEXT CHARACTER
 	private String parsingLine = null;
-	private String wordValue = "";	// value of word
+//	private String wordValue = "";	// value of word
 	private String nextChar = null;
 	private InputStream source = null;
 	private Scanner scanner = null;
 	
 	private static final HashSet<String> keywords;
 	private static final String KEYWORD_LIST_PATH = "data/keyword_list.txt";
-//	private static final String symbols = "+-*/%!|&=()[]{}<>.,?:;@";
 	private static final HashSet<String> operators;
 	private static final String OPERATOR_LIST_PATH = "data/operator_list.txt";
 	private static final HashSet<String> delimiters;
@@ -35,7 +34,7 @@ public class JavaLex {
 	private static final String HEX_CHAR = "[0-9a-fA-F]";
 	private static final String INT_SUFFIX = "[lL]";
 	private static final String REAL_SUFFIX = "[DdFf]";
-	
+	private static final String STRING_DELIMITER = "[\"\']";	
 
 	/**
 	 * 
@@ -304,6 +303,85 @@ public class JavaLex {
 				
 				word = new Word(beginLine, this.rowInParsingLine, Word.CONSTANT, value);
 			}
+		} else if (this.nextChar.matches(STRING_DELIMITER)) {
+			String delimiter = this.nextChar;
+			value = value.concat(this.nextChar);
+			while (!(this.nextChar = getNextChar()).equals(delimiter)) {
+				if (this.nextChar.equals("\n") || this.nextChar.equals("")) {
+					break;
+				}
+				value = value.concat(this.nextChar);
+				if (this.nextChar.equals("\\")) {
+					this.nextChar = getNextChar();
+					value = value.concat(this.nextChar);
+				}
+			}
+			
+			if (this.nextChar.equals(delimiter)) {
+				value = value.concat(this.nextChar);	// String end: set nextChar null
+			}
+			this.nextChar = null;
+			word = new Word(beginLine, this.rowInParsingLine, Word.CONSTANT, value);
+		} else if (isSymbol(this.nextChar)) {
+			while (isDelimiter(value.concat(nextChar)) || isOperator(value.concat(nextChar))) {
+				value = value.concat(this.nextChar);
+				this.nextChar = getNextChar();
+			}
+			
+			if (value.equals("//")) {	// inline comment
+				while ((!this.nextChar.equals("\n")) && (!this.nextChar.equals(""))) {
+					value = value.concat(this.nextChar);
+					this.nextChar = getNextChar();
+				}
+				
+				this.nextChar = null;	// comment end: set nextChar null
+				word = new Word(beginLine, this.rowInParsingLine, Word.COMMENT, value);
+				
+			} else if (value.equals("/*")) {	// block comment
+				String end = "";
+				while (!this.nextChar.equals("")) {
+					if (this.nextChar.equals("*"))
+						end = this.nextChar;
+					
+					value = value.concat(this.nextChar);
+					this.nextChar = getNextChar();
+					
+					if (this.nextChar.equals("/")) {
+						end = end.concat(this.nextChar);
+						if (end.equals("*/")) {	// comment end: set nextChar null
+							value = value.concat(this.nextChar);
+							this.nextChar = null;
+							break;
+						}
+					} else 
+						end = "";
+				}
+				
+				word = new Word(beginLine, this.rowInParsingLine, Word.COMMENT, value);
+			} else if (value.equals(".")) {
+				if (this.nextChar.matches(NUM_CHAR)) {
+					while (this.nextChar.matches(NUM_CHAR)) {
+						value = value.concat(this.nextChar);
+						this.nextChar = getNextChar();
+					}
+					
+					if (this.nextChar.matches(REAL_SUFFIX)) {	// end: set nextChar null
+						value = value.concat(this.nextChar);
+						this.nextChar = null;
+					}
+					
+					word = new Word(beginLine, this.rowInParsingLine, Word.CONSTANT, value);
+				} else {
+					word = new Word(beginLine, this.rowInParsingLine, Word.DELIMITER, value);
+				}
+				
+			} else if (isDelimiter(value)) {
+				word = new Word(beginLine, this.rowInParsingLine, Word.DELIMITER, value);
+			} else if (isOperator(value)) {
+				word = new Word(beginLine, this.rowInParsingLine, Word.OPERATOR, value);
+			} else {
+				word = new Word(beginLine, this.rowInParsingLine, Word.UNDEFINED, value);
+			}
 		} else {
 			nextChar = getNextChar();
 		}
@@ -406,14 +484,6 @@ public class JavaLex {
 	
 	private boolean isOperator(String value) {
 		if (JavaLex.operators.contains(value))
-			return true;
-		else
-			return false;
-	}
-	
-	@SuppressWarnings("unused")
-	private boolean isString(String value) {
-		if (value.matches("(\"*\")|(\'*\')"))
 			return true;
 		else
 			return false;
