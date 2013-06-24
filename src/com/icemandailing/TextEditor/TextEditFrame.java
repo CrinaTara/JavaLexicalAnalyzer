@@ -299,13 +299,13 @@ public class TextEditFrame extends JFrame{
 		add(mainPane);
 		doc = textPane.getStyledDocument();
 		
-//		countpanel = new JPanel();
-//		count = new JLabel();
-//		Count c  = new Count();
-//		Thread t = new Thread(c);
-//		t.start();
-//		countpanel.add(count);
-//		add(countpanel, BorderLayout.SOUTH);
+		countpanel = new JPanel();
+		count = new JLabel();
+		Count c  = new Count();
+		Thread t = new Thread(c);
+		t.start();
+		countpanel.add(count);
+		add(countpanel, BorderLayout.SOUTH);
 		
 		lex = new Lex();
 		Thread lexThread = new Thread(lex);
@@ -336,18 +336,13 @@ public class TextEditFrame extends JFrame{
 		}
 		
 		private void update(Document document) {
-			if (count < 5)
-				count++;
-			else {
+			if (!lex.updating)
 				try {
 					lex.setSource(document.getText(0, document.getLength()));
-					System.out.println("Update!");
 				} catch (BadLocationException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				count = 0;
-			}
+
 		}
 	}
 	
@@ -360,16 +355,15 @@ public class TextEditFrame extends JFrame{
 		
 		public void run() {
 			while (true) {
+				System.out.println("Updated:" + this.updated + ", updating:" + this.updating);
 				if ((this.updated) && (!this.updating)) {
 					updateTextPane();
 				}
 				
-				try
-				{
+				try {
 					Thread.sleep(1000);
 				}
-				catch (InterruptedException e)
-				{
+				catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
@@ -400,7 +394,9 @@ public class TextEditFrame extends JFrame{
 						doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
 						index = word.getIndex() + word.getValue().length();
 					}
+					
 				}
+				System.err.println("Update Over!!!!!!!!!!!!!!!!!!!");
 			} catch (BadLocationException e1) {
 				e1.printStackTrace();
 			}
