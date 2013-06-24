@@ -8,6 +8,7 @@ package com.icemandailing.JavaLex;
 public class Word {
 	private int line;
 	private int row;
+	private int index;
 	private int type;
 	private String value;
 	
@@ -22,9 +23,10 @@ public class Word {
 	public static final int DELIMITER = 5;
 	public static final int COMMENT = 6;
 	
-	public Word(int line, int row, int type, String value){
+	public Word(int line, int row,int index, int type, String value){
 		setLine(line);
 		setRow(row);
+		setIndex(index);
 		setType(type);
 		setValue(value);
 	}
@@ -41,6 +43,10 @@ public class Word {
 	 */
 	public int getRow() {
 		return row;
+	}
+	
+	public int getIndex() {
+		return this.index;
 	}
 
 	/**
@@ -78,6 +84,14 @@ public class Word {
 		else
 			throw new IllegalArgumentException("Row can not be negative");
 	}
+	
+	public void setIndex(int index) {
+		if (index >= 0)
+			this.index = index;
+		else
+			throw new IllegalArgumentException("Index can not be negative");
+		
+	}
 
 	/**
 	 * @param type the type to set
@@ -101,7 +115,7 @@ public class Word {
 	 */
 	@Override
 	public String toString() {
-		return "Word [line=" + line + ", row=" + row + ", type=" + type
+		return "Word [line=" + line + ", row=" + row + ", index=" + index + ", type=" + type
 				+ ", value=\"" + value + "\"]";
 	}
 	

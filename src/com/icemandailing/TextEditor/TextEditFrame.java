@@ -81,7 +81,7 @@ public class TextEditFrame extends JFrame{
 		StyleConstants.setForeground(defaultStyle, Color.BLACK);
 		StyleConstants.setBold(defaultStyle, false);
 		
-		styles = new ArrayList<SimpleAttributeSet>(6);
+		styles = new ArrayList<SimpleAttributeSet>(7);
 		// default
 		styles.add(new SimpleAttributeSet());
 		StyleConstants.setForeground(styles.get(0), Color.BLACK);
@@ -106,6 +106,10 @@ public class TextEditFrame extends JFrame{
 		styles.add(new SimpleAttributeSet());
 		StyleConstants.setForeground(styles.get(5), Color.BLACK);					
 		StyleConstants.setBold(styles.get(5), false);
+		// COMMENT
+		styles.add(new SimpleAttributeSet());
+		StyleConstants.setForeground(styles.get(6), new Color(65, 126, 96));		
+		StyleConstants.setBold(styles.get(6), false);
 	}
 	
 	public TextEditFrame()
@@ -298,9 +302,9 @@ public class TextEditFrame extends JFrame{
 		countpanel.add(count);
 		add(countpanel, BorderLayout.SOUTH);
 		
-		Lex lex = new Lex();
-		Thread lexThread = new Thread(lex);
-		lexThread.start();
+//		Lex lex = new Lex();
+//		Thread lexThread = new Thread(lex);
+//		lexThread.start();
 		
 	}
 	
@@ -477,6 +481,10 @@ public class TextEditFrame extends JFrame{
 				bsave.setEnabled(true);
 				opened = chooser.getSelectedFile();
 				setTitle("TextEdit - " + opened);
+				
+				JavaLex analyzer;
+				String source = "";
+				
 				try {
 					in = new InputStreamReader(new FileInputStream(chooser.getSelectedFile()),charsetName);
 				} catch (FileNotFoundException e2) {
@@ -484,45 +492,59 @@ public class TextEditFrame extends JFrame{
 				} catch (UnsupportedEncodingException e1) {
 					e1.printStackTrace();
 				}
-				BufferedReader br = new BufferedReader(in);
 				
+				BufferedReader br = new BufferedReader(in);
 				try {
 					textPane.setText("");
 					doc = textPane.getStyledDocument();
 					String s = br.readLine();
-					JavaLex analyzer;
 					while( s != null )
 					{
-						analyzer = new JavaLex(s);
-						Word word = null;
-						int row = 0;
-						while (analyzer.hasNextWord()) {
-							word = analyzer.nextWord();
-							if (word != null) {
-								doc.insertString(doc.getLength(), s.substring(row, word.getRow()), styles.get(0));
-//								System.out.print(s.substring(row, word.getRow()));
-								doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
-//								System.out.print(word.getValue());
-								row += word.getRow() - row;
-								row += word.getValue().length();
-							} else {
-								doc.insertString(doc.getLength(), s.substring(row), styles.get(0));
-//								System.out.print(s.substring(row));
-								row = s.length();
-							}
-							
-						}
-						doc.insertString(doc.getLength(),  newline, styles.get(0));
-//						System.out.print(newline);
+						source = source.concat(s + '\n');
 						s = br.readLine();
 					}
-					textPane.setCaretPosition(0);	// jump to the begin of the new file 
 					
+					analyzer = new JavaLex(source);
+					Word word = null;
+					int index = 0;
+					int line = 0;
+					while (analyzer.hasNextWord()) {
+						word = analyzer.nextWord();
+						if (word != null) {
+							doc.insertString(doc.getLength(), source.substring(index, word.getIndex()), styles.get(0));
+							doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
+							index = word.getIndex() + word.getValue().length();
+//							for (int i = line; i < word.getLine(); ++i)
+//								doc.insertString(doc.getLength(), newline, styles.get(0));
+						}
+					}
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				} catch (BadLocationException e1) {
+					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+				/**
+				 * 
+-						analyzer = new JavaLex(s);
+-						Word word = null;
+-						int row = 0;
+-						while (analyzer.hasNextWord()) {
+-							word = analyzer.nextWord();
+-							if (word != null) {
+-								doc.insertString(doc.getLength(), s.substring(row, word.getRow()), styles.get(0));
+-								doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
+-								row += word.getRow() - row;
+-								row += word.getValue().length();
+-							} else {
+-								doc.insertString(doc.getLength(), s.substring(row), styles.get(0));
+-								row = s.length();
+-							}
+-							
+-						}
+-						doc.insertString(doc.getLength(),  newline, styles.get(0));
+				 */ 
+				textPane.setCaretPosition(0);	// jump to the begin of the new file 
 				
 				try {
 					br.close();
