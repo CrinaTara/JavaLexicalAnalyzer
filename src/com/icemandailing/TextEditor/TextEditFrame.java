@@ -41,9 +41,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -71,7 +74,8 @@ public class TextEditFrame extends JFrame{
 	private String charsetName = "UTF-8";
     private String newline = "\n";
     private HashMap<Object, Action> actions;
-
+    private Lex lex = null;
+    private Updater updater = null;
 	
     /**
      * Setup all styles
@@ -271,7 +275,7 @@ public class TextEditFrame extends JFrame{
 		tools.add(binfo);
 		
 		JButton bexit = new JButton(new ImageIcon("img/exit.png"));
-		bexit.addActionListener( new ActionListener(){
+		bexit.addActionListener( new ActionListener() {
 			public void actionPerformed(ActionEvent e)
 			{
 				System.exit(0);
@@ -293,31 +297,117 @@ public class TextEditFrame extends JFrame{
 		mainPane.add(scrolltxt,BorderLayout.CENTER);
 		textPane.addMouseListener(popupListener);
 		add(mainPane);
+		doc = textPane.getStyledDocument();
 		
-		countpanel = new JPanel();
-		count = new JLabel();
-		Count c  = new Count();
-		Thread t = new Thread(c);
-		t.start();
-		countpanel.add(count);
-		add(countpanel, BorderLayout.SOUTH);
+//		countpanel = new JPanel();
+//		count = new JLabel();
+//		Count c  = new Count();
+//		Thread t = new Thread(c);
+//		t.start();
+//		countpanel.add(count);
+//		add(countpanel, BorderLayout.SOUTH);
 		
-//		Lex lex = new Lex();
-//		Thread lexThread = new Thread(lex);
-//		lexThread.start();
+		lex = new Lex();
+		Thread lexThread = new Thread(lex);
+		lexThread.start();
+		
+		updater = new Updater();
+		textPane.getDocument().addDocumentListener(updater);
 		
 	}
 	
-	private class Lex implements Runnable {
-		private JavaLex analyzer;
-		public void run() {
-			analyzer = new JavaLex(textPane.getText());
-			while (true) {
-				if (analyzer.hasNextWord())
-					System.out.println(analyzer.nextWord());
-				
+	
+	class Updater implements DocumentListener {
+		int count = 0;
+
+		@Override
+		public void changedUpdate(DocumentEvent e) {
+			update(e.getDocument());
+		}
+		@Override
+		public void insertUpdate(DocumentEvent e) {
+			update(e.getDocument());
+			
+		}
+		@Override
+		public void removeUpdate(DocumentEvent e) {
+			update(e.getDocument());
+			
+		}
+		
+		private void update(Document document) {
+			if (count < 5)
+				count++;
+			else {
+				try {
+					lex.setSource(document.getText(0, document.getLength()));
+					System.out.println("Update!");
+				} catch (BadLocationException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				count = 0;
 			}
 		}
+	}
+	
+	
+	private class Lex implements Runnable {
+		private JavaLex analyzer;
+		private String source = "";
+		private boolean updated = false;
+		private boolean updating = false;
+		
+		public void run() {
+			while (true) {
+				if ((this.updated) && (!this.updating)) {
+					updateTextPane();
+				}
+				
+				try
+				{
+					Thread.sleep(1000);
+				}
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		public void setSource(String source) {
+			if (!this.updating) {
+				this.source = source;
+				this.updated = true;
+				System.out.println("Set Source!");
+			}
+		}
+		
+		private void updateTextPane() {
+			this.updating = true;
+			this.updated = false;
+			
+			try {
+				textPane.setText("");
+//				doc = textPane.getStyledDocument();
+				analyzer = new JavaLex(source);
+				Word word = null;
+				int index = 0;
+				while (analyzer.hasNextWord()) {
+					word = analyzer.nextWord();
+					if (word != null) {
+						doc.insertString(doc.getLength(), source.substring(index, word.getIndex()), styles.get(0));
+						doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
+						index = word.getIndex() + word.getValue().length();
+					}
+				}
+			} catch (BadLocationException e1) {
+				e1.printStackTrace();
+			}
+			
+			this.updating = false;
+		}
+		
 	}
 	
 	private class Count implements Runnable
@@ -480,9 +570,7 @@ public class TextEditFrame extends JFrame{
 				saveitem.setEnabled(true);
 				bsave.setEnabled(true);
 				opened = chooser.getSelectedFile();
-				setTitle("TextEdit - " + opened);
-				
-				JavaLex analyzer;
+				setTitle("Java Lex - " + opened);
 				String source = "";
 				
 				try {
@@ -495,8 +583,6 @@ public class TextEditFrame extends JFrame{
 				
 				BufferedReader br = new BufferedReader(in);
 				try {
-					textPane.setText("");
-					doc = textPane.getStyledDocument();
 					String s = br.readLine();
 					while( s != null )
 					{
@@ -504,47 +590,13 @@ public class TextEditFrame extends JFrame{
 						s = br.readLine();
 					}
 					
-					analyzer = new JavaLex(source);
-					Word word = null;
-					int index = 0;
-					int line = 0;
-					while (analyzer.hasNextWord()) {
-						word = analyzer.nextWord();
-						if (word != null) {
-							doc.insertString(doc.getLength(), source.substring(index, word.getIndex()), styles.get(0));
-							doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
-							index = word.getIndex() + word.getValue().length();
-//							for (int i = line; i < word.getLine(); ++i)
-//								doc.insertString(doc.getLength(), newline, styles.get(0));
-						}
-					}
 				} catch (IOException e1) {
 					e1.printStackTrace();
-				} catch (BadLocationException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
 				}
-				/**
-				 * 
--						analyzer = new JavaLex(s);
--						Word word = null;
--						int row = 0;
--						while (analyzer.hasNextWord()) {
--							word = analyzer.nextWord();
--							if (word != null) {
--								doc.insertString(doc.getLength(), s.substring(row, word.getRow()), styles.get(0));
--								doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
--								row += word.getRow() - row;
--								row += word.getValue().length();
--							} else {
--								doc.insertString(doc.getLength(), s.substring(row), styles.get(0));
--								row = s.length();
--							}
--							
--						}
--						doc.insertString(doc.getLength(),  newline, styles.get(0));
-				 */ 
-				textPane.setCaretPosition(0);	// jump to the begin of the new file 
+				
+				textPane.setCaretPosition(0);	// jump to the begin of the new file
+				
+				lex.setSource(source);
 				
 				try {
 					br.close();
