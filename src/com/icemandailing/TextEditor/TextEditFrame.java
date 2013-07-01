@@ -203,6 +203,13 @@ public class TextEditFrame extends JFrame{
 		pasteitem.addActionListener(getActionByName(DefaultEditorKit.pasteAction));
 		editMenu.add(pasteitem);
 		
+		editMenu.addSeparator();
+		
+		JMenuItem formatItem = new JMenuItem("Format", new ImageIcon("img/format.png"));
+		formatItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
+		formatItem.addActionListener(new FormatListener());
+		editMenu.add(formatItem);
+		
 		JMenu infomenu = new JMenu("?");
 		menu.add(infomenu);
 		
@@ -267,6 +274,11 @@ public class TextEditFrame extends JFrame{
 		bpaste.addActionListener(getActionByName(DefaultEditorKit.pasteAction));
 		bpaste.setToolTipText("Paste");
 		tools.add(bpaste);
+		
+		JButton bformat = new JButton("Format");
+		bformat.addActionListener(new FormatListener());
+		bpaste.setToolTipText("Format");
+		tools.add(bformat);
 		
 		tools.addSeparator();
 		
@@ -613,6 +625,16 @@ public class TextEditFrame extends JFrame{
 				}
 				
 			}
+		}
+		
+	}
+	
+	private class FormatListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			System.out.println("Formater");
+			
 		}
 		
 	}
