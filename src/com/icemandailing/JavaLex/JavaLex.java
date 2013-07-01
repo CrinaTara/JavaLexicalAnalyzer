@@ -260,6 +260,8 @@ public class JavaLex {
 			while (isDelimiter(value.concat(nextChar)) || isOperator(value.concat(nextChar))) {
 				value = value.concat(this.nextChar);
 				this.nextChar = getNextChar();
+				if (this.nextChar.isEmpty())
+					break;
 			}
 			
 			if (value.equals("//")) {	// inline comment
@@ -435,7 +437,7 @@ public class JavaLex {
 	public static void main(String[] args) {
 		
 		try {
-			JavaLex analyzer = new JavaLex(new File("SaxParserApp.java"));
+			JavaLex analyzer = new JavaLex(new File("/Users/starsasumi/AddMemberServlet.java"));
 			while (analyzer.hasNextWord()) {
 				System.out.println(analyzer.nextWord());
 			}

@@ -46,6 +46,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
@@ -74,8 +75,8 @@ public class TextEditFrame extends JFrame{
 	private String charsetName = "UTF-8";
     private String newline = "\n";
     private HashMap<Object, Action> actions;
-    private Lex lex = null;
     private Updater updater = null;
+    static private boolean updating = false;
 	
     /**
      * Setup all styles
@@ -307,10 +308,6 @@ public class TextEditFrame extends JFrame{
 		countpanel.add(count);
 		add(countpanel, BorderLayout.SOUTH);
 		
-		lex = new Lex();
-		Thread lexThread = new Thread(lex);
-		lexThread.start();
-		
 		updater = new Updater();
 		textPane.getDocument().addDocumentListener(updater);
 		
@@ -336,12 +333,22 @@ public class TextEditFrame extends JFrame{
 		}
 		
 		private void update(Document document) {
-			if (!lex.updating)
-				try {
-					lex.setSource(document.getText(0, document.getLength()));
-				} catch (BadLocationException e1) {
-					e1.printStackTrace();
+//			System.err.println("updating: " + count + ", updatine: " + updating);
+			if (!updating) {
+				count++;
+				if (count > 5) {
+					try {
+						Lex lex = new Lex();
+						lex.setSource(document.getText(0, document.getLength()));
+						Thread lexThread = new Thread(lex);
+						lexThread.start();
+					} catch (BadLocationException e1) {
+						e1.printStackTrace();
+					}
+					count = 0;
 				}
+				
+			}
 
 		}
 	}
@@ -350,58 +357,55 @@ public class TextEditFrame extends JFrame{
 	private class Lex implements Runnable {
 		private JavaLex analyzer;
 		private String source = "";
-		private boolean updated = false;
-		private boolean updating = false;
 		
 		public void run() {
-			while (true) {
-				System.out.println("Updated:" + this.updated + ", updating:" + this.updating);
-				if ((this.updated) && (!this.updating)) {
-					updateTextPane();
-				}
-				
-				try {
-					Thread.sleep(1000);
-				}
-				catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
+			updateTextPane();
 		}
 		
 		public void setSource(String source) {
-			if (!this.updating) {
-				this.source = source;
-				this.updated = true;
-				System.out.println("Set Source!");
-			}
+			this.source = source;
 		}
 		
 		private void updateTextPane() {
-			this.updating = true;
-			this.updated = false;
+			if (updating) {
+				return;
+			}
+			updating = true;
+//			System.out.println("Start update");
 			
 			try {
-				textPane.setText("");
-//				doc = textPane.getStyledDocument();
+				int caret = textPane.getCaretPosition();
+				StyledDocument tempDoc = new DefaultStyledDocument();
 				analyzer = new JavaLex(source);
 				Word word = null;
 				int index = 0;
 				while (analyzer.hasNextWord()) {
+//					System.out.println("0");
 					word = analyzer.nextWord();
+//					System.out.println("Word:" + word);
 					if (word != null) {
-						doc.insertString(doc.getLength(), source.substring(index, word.getIndex()), styles.get(0));
-						doc.insertString(doc.getLength(), word.getValue(), styles.get(word.getType()));
+//						System.out.println("A");
+						tempDoc.insertString(tempDoc.getLength(), source.substring(index, word.getIndex()), styles.get(0));
+//						System.out.println("B");
+						tempDoc.insertString(tempDoc.getLength(), word.getValue(), styles.get(word.getType()));
+//						System.out.println("C");
 						index = word.getIndex() + word.getValue().length();
+//						System.out.println("D");
 					}
-					
+//					System.out.println("Has next:" + analyzer.hasNextWord());
 				}
-				System.err.println("Update Over!!!!!!!!!!!!!!!!!!!");
+//				System.out.println("No more words");
+				textPane.setDocument(tempDoc);
+				caret = Math.min(tempDoc.getLength(),caret+1);
+				textPane.setCaretPosition(caret);
+				textPane.getDocument().addDocumentListener(updater);
+//				System.err.println("Updated!");
 			} catch (BadLocationException e1) {
 				e1.printStackTrace();
 			}
 			
-			this.updating = false;
+//			System.out.println("End update");
+			updating = false;
 		}
 		
 	}
@@ -589,11 +593,19 @@ public class TextEditFrame extends JFrame{
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
-				
-				textPane.setCaretPosition(0);	// jump to the begin of the new file
-				
+				while (updating) {
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+				Lex lex = new Lex();
 				lex.setSource(source);
-				
+				Thread lexThread = new Thread(lex);
+				lexThread.start();
+//				textPane.setCaretPosition(0);	// jump to the begin of the new file				
 				try {
 					br.close();
 				} catch (IOException e1) {
