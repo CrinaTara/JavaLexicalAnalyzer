@@ -2,6 +2,7 @@ package com.icemandailing.TextEditor;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -65,7 +66,6 @@ public class TextEditFrame extends JFrame{
 	private JMenuItem saveitem;
 	private InfoDialog dialog;
 	private JTextPane textPane;
-	private StyledDocument doc;
 	private JPanel mainPane,countpanel;
 	private JFileChooser chooser,savechooser;
 	private File opened;
@@ -275,7 +275,7 @@ public class TextEditFrame extends JFrame{
 		bpaste.setToolTipText("Paste");
 		tools.add(bpaste);
 		
-		JButton bformat = new JButton("Format");
+		JButton bformat = new JButton(new ImageIcon("img/format.png"));
 		bformat.addActionListener(new FormatListener());
 		bpaste.setToolTipText("Format");
 		tools.add(bformat);
@@ -306,11 +306,11 @@ public class TextEditFrame extends JFrame{
 		Dimension fd = this.getSize();
 		textPane.setBounds(new Rectangle(fd));
         textPane.setMargin(new Insets(5,5,5,5));
+        textPane.setFont(new Font("Courier", Font.PLAIN, 14));
 		JScrollPane scrolltxt = new JScrollPane(textPane);
 		mainPane.add(scrolltxt,BorderLayout.CENTER);
 		textPane.addMouseListener(popupListener);
 		add(mainPane);
-		doc = textPane.getStyledDocument();
 		
 		countpanel = new JPanel();
 		count = new JLabel();
@@ -367,8 +367,8 @@ public class TextEditFrame extends JFrame{
 	
 	
 	private class Lex implements Runnable {
-		private JavaLex analyzer;
-		private String source = "";
+		protected JavaLex analyzer;
+		protected String source = "";
 		
 		public void run() {
 			updateTextPane();
@@ -420,6 +420,101 @@ public class TextEditFrame extends JFrame{
 			updating = false;
 		}
 		
+	}
+	
+	private class FormatLex implements Runnable {
+		
+		protected JavaLex analyzer;
+		protected String source = "";
+		private StyledDocument tempDoc;
+		private Word word;
+		private final String tab = "    ";
+		private final String space = " ";
+		
+		private static final String NEWLINE_CHAR = "[{};]";
+		private static final String FRONT_SPACE_CHAR = "[{]";
+		private static final String BEHIND_SPACE_CHAR = "[},]";
+		private static final String BOTH_SIDE_SPACE_CHAR = "[\\|&=+\\-/]|(==)|(!=)|(<=)|(>=)|(&&)|(\\|\\|)|(\\*)";
+		
+		public void run() {
+			updateTextPane();
+		}
+		
+		public void setSource(String source) {
+			this.source = source;
+		}
+		
+		private void updateTextPane() {
+			if (updating) {
+				return;
+			}
+			updating = true;
+			
+			int indent = 0;
+			Word lastWord = null;
+			try {
+				System.out.println("Start update");
+
+				tempDoc = new DefaultStyledDocument();
+				analyzer = new JavaLex(source);
+				word = null;
+				while (analyzer.hasNextWord()) {
+					word = analyzer.nextWord();
+					if (word != null) {
+						if (lastWord != null){
+							if (lastWord.getType() == Word.COMMENT)
+								insertNewline(indent);
+							else if ((lastWord.getType() == Word.CONSTANT || lastWord.getType() == Word.IDENTIFIER || lastWord.getType() == Word.KEYWORD || lastWord.getType() == Word.UNDEFINED) && (word.getType() != Word.OPERATOR && word.getType() != Word.DELIMITER))
+								tempDoc.insertString(tempDoc.getLength(), space, styles.get(0));
+							else if (lastWord.getValue().matches(NEWLINE_CHAR) && ((word.getType() != Word.COMMENT) || (lastWord.getLine() < word.getLine()))) {
+								insertNewline(indent);
+							} else if (lastWord.getLine() < word.getLine())
+								insertNewline(indent);
+						}
+						
+						if (word.getValue().matches(FRONT_SPACE_CHAR) || word.getValue().matches(BOTH_SIDE_SPACE_CHAR))
+							tempDoc.insertString(tempDoc.getLength(), space, styles.get(0));
+						
+						tempDoc.insertString(tempDoc.getLength(), word.getValue(), styles.get(word.getType()));
+						
+						if (word.getValue().matches(BEHIND_SPACE_CHAR) || word.getValue().matches(BOTH_SIDE_SPACE_CHAR))
+							tempDoc.insertString(tempDoc.getLength(), space, styles.get(0));
+						
+						if (word.getValue().equals("{")) {
+							indent++;
+						} else if (word.getValue().equals("}")) {
+							tempDoc.insertString(tempDoc.getLength(), newline, styles.get(0));
+							indent--;
+						}
+						
+						if (lastWord != null && lastWord.getValue().equals("@"))
+							word = new Word(word.getLine(), lastWord.getRow(),lastWord.getIndex(), Word.COMMENT, lastWord.getValue() + word.getValue());
+						lastWord = word;
+					}
+				}
+				textPane.setDocument(tempDoc);
+				textPane.getDocument().addDocumentListener(updater);
+			} catch (BadLocationException e1) {
+				e1.printStackTrace();
+			}
+			
+			updating = false;
+		}
+		
+		private void insertNewline(int indent) {
+			try {
+				tempDoc.insertString(tempDoc.getLength(), newline, styles.get(0));
+				int ind = indent;
+				if (word.getValue().equals("}"))
+					ind--;
+				
+				for (int i=0; i<ind; ++i){
+					tempDoc.insertString(tempDoc.getLength(), tab, styles.get(0));
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
 	}
 	
 	private class Count implements Runnable
@@ -634,7 +729,16 @@ public class TextEditFrame extends JFrame{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			System.out.println("Formater");
-			
+			String source = "";
+			try {
+				source = textPane.getDocument().getText(0, textPane.getDocument().getLength());
+				FormatLex lex = new FormatLex();
+				lex.setSource(source);
+				Thread lexThread = new Thread(lex);
+				lexThread.start();
+			} catch (BadLocationException e1) {
+				e1.printStackTrace();
+			}
 		}
 		
 	}
