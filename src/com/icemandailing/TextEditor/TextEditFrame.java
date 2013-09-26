@@ -188,24 +188,24 @@ public class TextEditFrame extends JFrame{
 		
 		editMenu.addSeparator();
 		
-		JMenuItem cutitem = new JMenuItem("Cut",new ImageIcon("img/cut.png"));
+		JMenuItem cutitem = new JMenuItem("Cut",new ImageIcon("./img/cut.png"));
 		cutitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_MASK));
 		cutitem.addActionListener(getActionByName(DefaultEditorKit.cutAction));
 		editMenu.add(cutitem);
 		
-		JMenuItem copyitem = new JMenuItem("Copy",new ImageIcon("img/copy.png"));
+		JMenuItem copyitem = new JMenuItem("Copy",new ImageIcon("./img/copy.png"));
 		copyitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK));
 		copyitem.addActionListener(getActionByName(DefaultEditorKit.copyAction));
 		editMenu.add(copyitem);
 		
-		JMenuItem pasteitem = new JMenuItem("Paste",new ImageIcon("img/paste.png"));
+		JMenuItem pasteitem = new JMenuItem("Paste",new ImageIcon("./img/paste.png"));
 		pasteitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK));
 		pasteitem.addActionListener(getActionByName(DefaultEditorKit.pasteAction));
 		editMenu.add(pasteitem);
 		
 		editMenu.addSeparator();
 		
-		JMenuItem formatItem = new JMenuItem("Format", new ImageIcon("img/format.png"));
+		JMenuItem formatItem = new JMenuItem("Format", new ImageIcon("./img/format.png"));
 		formatItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
 		formatItem.addActionListener(new FormatListener());
 		editMenu.add(formatItem);
@@ -213,7 +213,7 @@ public class TextEditFrame extends JFrame{
 		JMenu infomenu = new JMenu("?");
 		menu.add(infomenu);
 		
-		JMenuItem infoitem = new JMenuItem("Info",new ImageIcon("img/info.png"));
+		JMenuItem infoitem = new JMenuItem("Info",new ImageIcon("./img/info.png"));
 		infoitem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_MASK));
 		infoitem.addActionListener(new InfoListener());
 		infomenu.add(infoitem);
@@ -223,15 +223,15 @@ public class TextEditFrame extends JFrame{
 		 */
 		popup = new JPopupMenu();
 		
-		JMenuItem cut = new JMenuItem("Cut",new ImageIcon("img/cut.png"));
+		JMenuItem cut = new JMenuItem("Cut",new ImageIcon("./img/cut.png"));
 		cut.addActionListener(getActionByName(DefaultEditorKit.cutAction));
 		popup.add(cut);
 		
-		JMenuItem copy = new JMenuItem("Copy",new ImageIcon("img/copy.png"));
+		JMenuItem copy = new JMenuItem("Copy",new ImageIcon("./img/copy.png"));
 		copy.addActionListener(getActionByName(DefaultEditorKit.copyAction));
 		popup.add(copy);
 		
-		JMenuItem paste = new JMenuItem("Paste",new ImageIcon("img/paste.png"));
+		JMenuItem paste = new JMenuItem("Paste",new ImageIcon("./img/paste.png"));
 		paste.addActionListener(getActionByName(DefaultEditorKit.pasteAction));
 		popup.add(paste);
 		
@@ -242,52 +242,52 @@ public class TextEditFrame extends JFrame{
 		 */
 		JToolBar tools = new JToolBar("Tools");
 		
-		JButton bopenf = new JButton(new ImageIcon("img/open.png"));
+		JButton bopenf = new JButton(new ImageIcon("./img/open.png"));
 		bopenf.addActionListener(new FileOpenListener());
 		bopenf.setToolTipText("Open File");
 		tools.add(bopenf);
 		
-		bsave = new JButton(new ImageIcon("img/save.png"));
+		bsave = new JButton(new ImageIcon("./img/save.png"));
 		bsave.addActionListener(new FileSaveListener());
 		bsave.setToolTipText("Save");
 		bsave.setEnabled(false);
 		tools.add(bsave);
 		
-		JButton bsaveas = new JButton(new ImageIcon("img/saveas.png"));
+		JButton bsaveas = new JButton(new ImageIcon("./img/saveas.png"));
 		bsaveas.addActionListener(new FileSaveAsListener());
 		bsaveas.setToolTipText("Save As");
 		tools.add(bsaveas);
 		
 		tools.addSeparator();
 		
-		JButton bcut = new JButton(new ImageIcon("img/cut.png"));
+		JButton bcut = new JButton(new ImageIcon("./img/cut.png"));
 		bcut.addActionListener(getActionByName(DefaultEditorKit.cutAction));
 		bcut.setToolTipText("Cut");
 		tools.add(bcut);
 		
-		JButton bcopy = new JButton(new ImageIcon("img/copy.png"));
+		JButton bcopy = new JButton(new ImageIcon("./img/copy.png"));
 		bcopy.addActionListener(getActionByName(DefaultEditorKit.copyAction));
 		bcopy.setToolTipText("Copy");
 		tools.add(bcopy);
 		
-		JButton bpaste = new JButton(new ImageIcon("img/paste.png"));
+		JButton bpaste = new JButton(new ImageIcon("./img/paste.png"));
 		bpaste.addActionListener(getActionByName(DefaultEditorKit.pasteAction));
 		bpaste.setToolTipText("Paste");
 		tools.add(bpaste);
 		
-		JButton bformat = new JButton(new ImageIcon("img/format.png"));
+		JButton bformat = new JButton(new ImageIcon("./img/format.png"));
 		bformat.addActionListener(new FormatListener());
 		bpaste.setToolTipText("Format");
 		tools.add(bformat);
 		
 		tools.addSeparator();
 		
-		JButton binfo = new JButton(new ImageIcon("img/info.png"));
+		JButton binfo = new JButton(new ImageIcon("./img/info.png"));
 		binfo.addActionListener( new InfoListener() );
 		binfo.setToolTipText("Info");
 		tools.add(binfo);
 		
-		JButton bexit = new JButton(new ImageIcon("img/exit.png"));
+		JButton bexit = new JButton(new ImageIcon("./img/exit.png"));
 		bexit.addActionListener( new ActionListener() {
 			public void actionPerformed(ActionEvent e)
 			{

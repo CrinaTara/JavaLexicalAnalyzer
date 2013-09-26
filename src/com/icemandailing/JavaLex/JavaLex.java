@@ -28,11 +28,11 @@ public class JavaLex {
 	private boolean hasNextChar = true;
 	
 	private static final HashSet<String> keywords;
-	private static final String KEYWORD_LIST_PATH = "data/keyword_list.txt";
+	private static final String KEYWORD_LIST_PATH = "./data/keyword_list.txt";
 	private static final HashSet<String> operators;
-	private static final String OPERATOR_LIST_PATH = "data/operator_list.txt";
+	private static final String OPERATOR_LIST_PATH = "./data/operator_list.txt";
 	private static final HashSet<String> delimiters;
-	private static final String DELIMITER_LIST_PATH = "data/delimiter_list.txt";
+	private static final String DELIMITER_LIST_PATH = "./data/delimiter_list.txt";
 	private static final String NUM_CHAR = "[\\d]";
 	private static final String OCT_CHAR = "[0-7]";
 	private static final String HEX_CHAR = "[0-9a-fA-F]";
@@ -437,7 +437,7 @@ public class JavaLex {
 	public static void main(String[] args) {
 		
 		try {
-			JavaLex analyzer = new JavaLex(new File("/Users/starsasumi/AddMemberServlet.java"));
+			JavaLex analyzer = new JavaLex(new File("SaxParserApp.java"));
 			while (analyzer.hasNextWord()) {
 				System.out.println(analyzer.nextWord());
 			}
